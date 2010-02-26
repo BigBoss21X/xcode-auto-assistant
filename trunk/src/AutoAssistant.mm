@@ -134,7 +134,7 @@ NSWindow *FindAssistantWindow() {
 	
 	[result appendString:trimmed];
 	
-	if ([result rangeOfString:@";"].location == [result length] - 1)
+	if ([result rangeOfString:@";" options:NSBackwardsSearch].location == [result length] - 1)
 		return NO; // already a semicolon at the end
 	
 	[result appendString:@";"];
