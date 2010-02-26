@@ -169,6 +169,10 @@ NSWindow *FindAssistantWindow() {
 		([prefix rangeOfString:@"/*"].location != NSNotFound && [prefix rangeOfString:@"*/"].location == NSNotFound))
 		return NO; // you're writing a comment! maybe. this isn't a lexer.
 
+	// check for #import, the one place we can help you with a string!
+	if ([prefix rangeOfString:@"#import \""].location == 0)
+		return YES; // delay zero
+	
 	prefix = [prefix stringByReplacingOccurrencesOfString:@"\\\"" withString:@""];
 	int numberOfQuotes = [[prefix componentsSeparatedByString:@"\""] count];
 	if (numberOfQuotes % 2 == 0)
