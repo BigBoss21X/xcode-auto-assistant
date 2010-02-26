@@ -1,0 +1,21 @@
+# What is it?
+
+This is an xcode plug-in which makes writing Obj-C easier. It will aggressively popup the completion list when typing certain characters, and it will move semicolons to the end of the line.
+
+It's not as smart as it could be right now but it's better than nothing! I plan to improve it over time as needed.
+
+# Installation
+
+1. Open the project and build the plug-in (or download and extract it from the [Downloads page](http://github.com/ciaran/xcode-bracket-matcher/downloads)).
+2. After a successful build the plug-in should automatically be installed; to install it manually move the product (`XcodeAutoAssistant.pbplugin`) to `~/Library/Application Support/Developer/Shared/Xcode/Plug-ins` (create the directory if necessary).
+3. Restart Xcode.
+
+# Usage
+
+When editing an Objective-C(++) or Objective-J file, you can type a `;` to add a semicolon to the current line. The plug-in will automatically look forwards to insert the semicolon at the appropriate location.
+
+# Credit
+
+This document, project, and source code was forked from the **excellent** [xcode-bracket-matcher][] by ciaran, without which I could not have done this.
+
+  [xcode-bracket-matcher]: http://github.com/ciaran/xcode-bracket-matcher
