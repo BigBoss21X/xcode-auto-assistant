@@ -3,6 +3,7 @@
 
 #import "AutoAssistant.h"
 #import "JRSwizzle.h"
+#import <objc/runtime.h>
 
 static AutoAssistant* SharedInstance;
 
@@ -28,7 +29,7 @@ NSWindow *FindAssistantWindow() {
 	
 	if (assistantClass)
 		for (NSWindow *window in [[NSApplication sharedApplication] windows])
-			if ([window isKindOfClass:assistantClass])
+			if ([window isVisible] && [window isKindOfClass:assistantClass])
 				return window;
 	
 	return nil;
@@ -38,7 +39,7 @@ NSWindow *FindAssistantWindow() {
 - (void)AutoAssistant_keyDown:(NSEvent*)event {
 
 	[NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(showAssistantWindow) object:nil];
-
+	
 	BOOL didInsert = NO, showAssistant = NO;
 	NSTimeInterval delay = 0;
 	
@@ -61,7 +62,7 @@ NSWindow *FindAssistantWindow() {
 
 		NSWindow *assistant = FindAssistantWindow();
 	
-		if (assistant && ![assistant isVisible] && [[AutoAssistant sharedInstance] shouldShowCompletionListForTextView:self withDelay:&delay])
+		if (!assistant && [[AutoAssistant sharedInstance] shouldShowCompletionListForTextView:self withDelay:&delay])
 			showAssistant = YES;
 	}
 
