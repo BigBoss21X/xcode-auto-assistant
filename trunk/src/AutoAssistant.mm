@@ -39,7 +39,9 @@ NSWindow *FindAssistantWindow() {
 
 	[NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(showAssistantWindow) object:nil];
 
-	BOOL didInsert = NO, showAssistantNow = NO;
+	BOOL didInsert = NO, showAssistant = NO;
+	NSTimeInterval delay = 0;
+	
 	if ([[event characters] isEqualToString:@";"])
 	{
 		NSString* language = [[self textStorage] language];
@@ -48,8 +50,10 @@ NSWindow *FindAssistantWindow() {
 	}
 	else if ([[event characters] isEqualToString:@"."]) {
 
-		if ([[AutoAssistant sharedInstance] shouldShowCompletionListForTextView:self])
-			showAssistantNow = YES;
+		if ([[AutoAssistant sharedInstance] shouldShowCompletionListForTextView:self withDelay:&delay]) {
+			showAssistant = (delay != 0.4);
+			delay = 0;
+		}
 	}
 	else if ([[event characters] length] == 1 &&
 			 ([[NSCharacterSet uppercaseLetterCharacterSet] characterIsMember:[[event characters] characterAtIndex:0]] ||
@@ -57,15 +61,19 @@ NSWindow *FindAssistantWindow() {
 
 		NSWindow *assistant = FindAssistantWindow();
 	
-		if (assistant && ![assistant isVisible] && [[AutoAssistant sharedInstance] shouldShowCompletionListForTextView:self])
-			[self performSelector:@selector(showAssistantWindow) withObject:nil afterDelay:0.1];
+		if (assistant && ![assistant isVisible] && [[AutoAssistant sharedInstance] shouldShowCompletionListForTextView:self withDelay:&delay])
+			showAssistant = YES;
 	}
 
 	if(!didInsert)
 		[self AutoAssistant_keyDown:event];
 	
-	if (showAssistantNow)
-		[self showAssistantWindow];
+	if (showAssistant) {
+		if (delay == 0)
+			[self showAssistantWindow];
+		else
+			[self performSelector:@selector(showAssistantWindow) withObject:nil afterDelay:delay];
+	}
 }
 - (void)showAssistantWindow {
 	CGEventRef keyPressEvent=CGEventCreateKeyboardEvent (NULL, (CGKeyCode)53, true);
@@ -139,7 +147,7 @@ NSWindow *FindAssistantWindow() {
 	return YES;
 }
 
-- (BOOL) shouldShowCompletionListForTextView:(NSTextView *)textView {
+- (BOOL) shouldShowCompletionListForTextView:(NSTextView *)textView withDelay:(NSTimeInterval *)delay {
 	
 	if(![[textView selectedRanges] count])
 		return NO;
@@ -164,6 +172,25 @@ NSWindow *FindAssistantWindow() {
 	int numberOfQuotes = [[prefix componentsSeparatedByString:@"\""] count];
 	if (numberOfQuotes % 2 == 0)
 		return NO; // you're writing a string! maybe. see above.
+
+	NSUInteger wordLength = 1; // include the character you're typing
+	
+	for (int i=[prefix length]-1; i>=0; i--) {
+		unichar c = [prefix characterAtIndex:i];
+		if ([[NSCharacterSet uppercaseLetterCharacterSet] characterIsMember:c] ||
+			[[NSCharacterSet lowercaseLetterCharacterSet] characterIsMember:c])
+			wordLength++;
+		else break;
+	}
+
+	if (wordLength == 1)
+		(*delay) = 0.4;
+	else if (wordLength == 2)
+		(*delay) = 0.2;
+	else if (wordLength == 3)
+		(*delay) = 0.1;
+	else
+		(*delay) = 0;
 	
 	return YES;
 }
