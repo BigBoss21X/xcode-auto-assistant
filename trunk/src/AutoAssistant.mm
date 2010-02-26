@@ -16,6 +16,8 @@ static AutoAssistant* SharedInstance;
 
 // PBXCodeAssistant
 - (void)liveInlineRemoveCompletion;
+
+- (void)showAssistantWindow;
 @end
 
 static NSArray* SupportedLanguages;
@@ -35,33 +37,37 @@ NSWindow *FindAssistantWindow() {
 @implementation NSTextView (AutoAssistant)
 - (void)AutoAssistant_keyDown:(NSEvent*)event {
 
-	[NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(pressESCSometimeLater) object:nil];
+	[NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(showAssistantWindow) object:nil];
 
-	BOOL didInsert = NO;//, pressESC = NO;
+	BOOL didInsert = NO, showAssistantNow = NO;
 	if ([[event characters] isEqualToString:@";"])
 	{
 		NSString* language = [[self textStorage] language];
 		if([SupportedLanguages containsObject:language])
 			didInsert = [[AutoAssistant sharedInstance] insertSemicolonForTextView:self];
 	}
-	else if ([[event characters] isEqualToString:@"."] || 
-			 ([[event characters] length] == 1 && [[NSCharacterSet alphanumericCharacterSet] characterIsMember:[[event characters] characterAtIndex:0]])) {
+	else if ([[event characters] isEqualToString:@"."]) {
+
+		if ([[AutoAssistant sharedInstance] shouldShowCompletionListForTextView:self])
+			showAssistantNow = YES;
+	}
+	else if ([[event characters] length] == 1 &&
+			 ([[NSCharacterSet uppercaseLetterCharacterSet] characterIsMember:[[event characters] characterAtIndex:0]] ||
+			  [[NSCharacterSet lowercaseLetterCharacterSet] characterIsMember:[[event characters] characterAtIndex:0]])) {
 
 		NSWindow *assistant = FindAssistantWindow();
 	
-		if (assistant
-			&& (![assistant isVisible] || [[event characters] isEqualToString:@"."]) 
-			&& [[AutoAssistant sharedInstance] shouldShowCompletionListForTextView:self]) {
-			
-			[self performSelector:@selector(pressESCSometimeLater) withObject:nil afterDelay:0.15];
-		}
-//			pressESC = YES;
+		if (assistant && ![assistant isVisible] && [[AutoAssistant sharedInstance] shouldShowCompletionListForTextView:self])
+			[self performSelector:@selector(showAssistantWindow) withObject:nil afterDelay:0.1];
 	}
 
 	if(!didInsert)
 		[self AutoAssistant_keyDown:event];
+	
+	if (showAssistantNow)
+		[self showAssistantWindow];
 }
-- (void)pressESCSometimeLater {
+- (void)showAssistantWindow {
 	CGEventRef keyPressEvent=CGEventCreateKeyboardEvent (NULL, (CGKeyCode)53, true);
 	CGEventPost(kCGSessionEventTap, keyPressEvent);
 	CFRelease(keyPressEvent);
@@ -146,8 +152,19 @@ NSWindow *FindAssistantWindow() {
 	// Get the current line from the carat position
 	NSRange lineRange = [textView.textStorage.string lineRangeForRange:selectedRange];
 	lineRange.length -= 1;
-//	NSString* lineText = [textView.textStorage.string substringWithRange:lineRange];
+	NSString* lineText = [textView.textStorage.string substringWithRange:lineRange];
+	
+	NSString *prefix = [lineText substringToIndex:selectedRange.location - lineRange.location];
+	
+	if ([prefix rangeOfString:@"//"].location != NSNotFound ||
+		([prefix rangeOfString:@"/*"].location != NSNotFound && [prefix rangeOfString:@"*/"].location == NSNotFound))
+		return NO; // you're writing a comment! maybe. this isn't a lexer.
 
+	prefix = [prefix stringByReplacingOccurrencesOfString:@"\\\"" withString:@""];
+	int numberOfQuotes = [[prefix componentsSeparatedByString:@"\""] count];
+	if (numberOfQuotes % 2 == 0)
+		return NO; // you're writing a string! maybe. see above.
+	
 	return YES;
 }
 
