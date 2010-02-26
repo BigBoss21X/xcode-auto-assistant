@@ -9,5 +9,5 @@
 }
 + (AutoAssistant*)sharedInstance;
 - (BOOL)insertSemicolonForTextView:(NSTextView*)textView;
-- (BOOL)shouldShowCompletionListForTextView:(NSTextView*)textView;
+- (BOOL)shouldShowCompletionListForTextView:(NSTextView*)textView withDelay:(NSTimeInterval *)delay;
 @end
