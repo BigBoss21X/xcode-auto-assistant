@@ -20,9 +20,21 @@ static AutoAssistant* SharedInstance;
 
 static NSArray* SupportedLanguages;
 
+NSWindow *FindAssistantWindow() {
+	
+	Class assistantClass = NSClassFromString(@"PBXCodeAssistantWindow");
+	
+	if (assistantClass)
+		for (NSWindow *window in [[NSApplication sharedApplication] windows])
+			if ([window isKindOfClass:assistantClass])
+				return window;
+	
+	return nil;
+}
+
 @implementation NSTextView (AutoAssistant)
-- (void)AutoAssistant_keyDown:(NSEvent*)event
-{
+- (void)AutoAssistant_keyDown:(NSEvent*)event {
+	
 	BOOL didInsert = NO;
 	if ([[event characters] isEqualToString:@";"])
 	{
@@ -33,16 +45,13 @@ static NSArray* SupportedLanguages;
 	else if ([[event characters] isEqualToString:@"."]) {
 		[self performSelector:@selector(pressEscSometimeLater) withObject:nil afterDelay:0];
 	}
-	else if ([[event characters] length] == 1 && [[NSCharacterSet lowercaseLetterCharacterSet] characterIsMember:[[event characters] characterAtIndex:0]]) {
-
-		Class assistantClass = NSClassFromString(@"PBXCodeAssistantWindow");
+	else if ([[event characters] length] == 1 && 
+			 ([[NSCharacterSet lowercaseLetterCharacterSet] characterIsMember:[[event characters] characterAtIndex:0]] ||
+			  [[NSCharacterSet uppercaseLetterCharacterSet] characterIsMember:[[event characters] characterAtIndex:0]])) {
 		
-		if (assistantClass)
-			for (NSWindow *window in [[NSApplication sharedApplication] windows])
-				if ([window isKindOfClass:assistantClass] && ![window isVisible]) {
-					[self performSelector:@selector(pressEscSometimeLater) withObject:nil afterDelay:0];
-					break;
-				}
+		NSWindow *assistant = FindAssistantWindow();
+		if (assistant && ![assistant isVisible])
+			[self performSelector:@selector(pressEscSometimeLater) withObject:nil afterDelay:0];
 	}
 
 	if(!didInsert)
@@ -91,6 +100,9 @@ static NSArray* SupportedLanguages;
 	lineRange.length -= 1;
 	NSString* lineText = [textView.textStorage.string substringWithRange:lineRange];
 
+	if (lineRange.location + lineRange.length == selectedRange.location)
+		return NO; // we're already at the end of a line, let XCode do it
+		
 	// build up the result string
 	NSMutableString *result = [NSMutableString string];
 
