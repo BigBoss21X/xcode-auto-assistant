@@ -34,34 +34,39 @@ NSWindow *FindAssistantWindow() {
 
 @implementation NSTextView (AutoAssistant)
 - (void)AutoAssistant_keyDown:(NSEvent*)event {
-	
-	BOOL didInsert = NO;
+
+	[NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(pressESCSometimeLater) object:nil];
+
+	BOOL didInsert = NO;//, pressESC = NO;
 	if ([[event characters] isEqualToString:@";"])
 	{
 		NSString* language = [[self textStorage] language];
 		if([SupportedLanguages containsObject:language])
 			didInsert = [[AutoAssistant sharedInstance] insertSemicolonForTextView:self];
 	}
-	else if ([[event characters] isEqualToString:@"."]) {
-		[self performSelector:@selector(pressEscSometimeLater) withObject:nil afterDelay:0];
-	}
-	else if ([[event characters] length] == 1 && 
-			 ([[NSCharacterSet lowercaseLetterCharacterSet] characterIsMember:[[event characters] characterAtIndex:0]] ||
-			  [[NSCharacterSet uppercaseLetterCharacterSet] characterIsMember:[[event characters] characterAtIndex:0]])) {
-		
+	else if ([[event characters] isEqualToString:@"."] || 
+			 ([[event characters] length] == 1 && [[NSCharacterSet alphanumericCharacterSet] characterIsMember:[[event characters] characterAtIndex:0]])) {
+
 		NSWindow *assistant = FindAssistantWindow();
-		if (assistant && ![assistant isVisible])
-			[self performSelector:@selector(pressEscSometimeLater) withObject:nil afterDelay:0];
+	
+		if (assistant
+			&& (![assistant isVisible] || [[event characters] isEqualToString:@"."]) 
+			&& [[AutoAssistant sharedInstance] shouldShowCompletionListForTextView:self]) {
+			
+			[self performSelector:@selector(pressESCSometimeLater) withObject:nil afterDelay:0.15];
+		}
+//			pressESC = YES;
 	}
 
 	if(!didInsert)
 		[self AutoAssistant_keyDown:event];
 }
-- (void)pressEscSometimeLater {
+- (void)pressESCSometimeLater {
 	CGEventRef keyPressEvent=CGEventCreateKeyboardEvent (NULL, (CGKeyCode)53, true);
 	CGEventPost(kCGSessionEventTap, keyPressEvent);
 	CFRelease(keyPressEvent);
 }
+
 @end
 
 @implementation AutoAssistant
@@ -82,11 +87,6 @@ NSWindow *FindAssistantWindow() {
 
 - (BOOL)insertSemicolonForTextView:(NSTextView*)textView
 {
-	static NSCharacterSet *controlSet = nil;
-	
-	if (!controlSet)
-		controlSet = [[NSCharacterSet characterSetWithCharactersInString:@"'\""] retain];
-
 	if(![[textView selectedRanges] count])
 		return NO;
 	
@@ -130,6 +130,24 @@ NSWindow *FindAssistantWindow() {
 	
 	[textView replaceCharactersInRange:lineRange withString:result];
 	
+	return YES;
+}
+
+- (BOOL) shouldShowCompletionListForTextView:(NSTextView *)textView {
+	
+	if(![[textView selectedRanges] count])
+		return NO;
+	
+	// Get the position of the carat
+	NSRange selectedRange = [[[textView selectedRanges] lastObject] rangeValue];
+	if(selectedRange.length > 0)
+		return NO;
+	
+	// Get the current line from the carat position
+	NSRange lineRange = [textView.textStorage.string lineRangeForRange:selectedRange];
+	lineRange.length -= 1;
+//	NSString* lineText = [textView.textStorage.string substringWithRange:lineRange];
+
 	return YES;
 }
 
