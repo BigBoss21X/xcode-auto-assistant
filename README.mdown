@@ -6,13 +6,17 @@ It's not as smart as it could be right now but it's better than nothing! I plan 
 
 # Installation
 
-1. Open the project and build the plug-in in RELEASE mode.
-2. After a successful build the plug-in should automatically be installed; to install it manually move the product (`XcodeAutoAssistant.pbplugin`) to `~/Library/Application Support/Developer/Shared/Xcode/Plug-ins` (create the directory if necessary).
-3. Restart Xcode.
+Simply move the product (`XcodeAutoAssistant.pbplugin`) to `~/Library/Application Support/Developer/Shared/Xcode/Plug-ins` (create the directory if necessary).
+
+Then restart Xcode.
 
 # Usage
 
-When editing an Objective-C(++) or Objective-J file, you can type a `;` to add a semicolon to the current line. The plug-in will automatically look forwards to insert the semicolon at the appropriate location.
+When editing an Objective-C file, the completion list will be triggered automatically as you type alphanumeric characters.
+
+The list appears with a delay that is proportional to the number of characters in the word typed thus far. For instance, if you type only one letter, the delay is substantial (because the completion list will be quite long), but by the time you type the 4th character, it appears instantly and predictably.
+
+Also, you can type a `;` to add a semicolon to the current line. The plug-in will automatically look forwards to insert the semicolon at the appropriate location.
 
 # Credit
 
