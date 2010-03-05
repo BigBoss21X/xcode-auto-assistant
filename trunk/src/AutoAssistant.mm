@@ -4,6 +4,7 @@
 #import "AutoAssistant.h"
 #import "JRSwizzle.h"
 #import <objc/runtime.h>
+#import <Sparkle/Sparkle.h>
 
 static AutoAssistant* SharedInstance;
 
@@ -38,7 +39,7 @@ NSWindow *FindAssistantWindow() {
 @implementation NSTextView (AutoAssistant)
 - (void)AutoAssistant_keyDown:(NSEvent*)event {
 
-	[NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(showAssistantWindow) object:nil];
+	[NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(complete:) object:self];
 	
 	BOOL didInsert = NO, showAssistant = NO;
 	NSTimeInterval delay = 0;
@@ -65,21 +66,16 @@ NSWindow *FindAssistantWindow() {
 		if (!assistant && [[AutoAssistant sharedInstance] shouldShowCompletionListForTextView:self withDelay:&delay])
 			showAssistant = YES;
 	}
-
+	
 	if(!didInsert)
 		[self AutoAssistant_keyDown:event];
 	
 	if (showAssistant) {
 		if (delay == 0)
-			[self showAssistantWindow];
+			[self complete:self];
 		else
-			[self performSelector:@selector(showAssistantWindow) withObject:nil afterDelay:delay];
+			[self performSelector:@selector(complete:) withObject:self afterDelay:delay];
 	}
-}
-- (void)showAssistantWindow {
-	CGEventRef keyPressEvent=CGEventCreateKeyboardEvent (NULL, (CGKeyCode)53, true);
-	CGEventPost(kCGSessionEventTap, keyPressEvent);
-	CFRelease(keyPressEvent);
 }
 
 @end
@@ -90,8 +86,13 @@ NSWindow *FindAssistantWindow() {
 	if(![[[NSBundle mainBundle] bundleIdentifier] isEqualToString:@"com.apple.Xcode"])
 		return;
 
+//	NSBundle *autoAssistantBundle = [NSBundle bundleForClass:[AutoAssistant class]];
+
+//	SUUpdater *updater = [SUUpdater updaterForBundle:autoAssistantBundle];
+//	[updater setFeedURL:<#(NSURL *)feedURL#>
+	
 	if([NSClassFromString(@"XCSourceCodeTextView") jr_swizzleMethod:@selector(keyDown:) withMethod:@selector(AutoAssistant_keyDown:) error:NULL])
-		NSLog(@"AutoAssistant loaded");
+		NSLog(@"AutoAssistant loaded!");
 
 	SupportedLanguages = [[NSArray alloc] initWithObjects:@"xcode.lang.objcpp", @"xcode.lang.objc", @"xcode.lang.objj", nil];
 }
