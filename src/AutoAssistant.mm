@@ -89,14 +89,18 @@ NSWindow *FindAssistantWindow() {
 	NSBundle *autoAssistantBundle = [NSBundle bundleForClass:[AutoAssistant class]];
 
 	SUUpdater *updater = [SUUpdater updaterForBundle:autoAssistantBundle];
-	[updater setFeedURL:[NSURL URLWithString:@"http://xcode-auto-assistant.googlecode.com/svn/trunk/web/appcast.xml"]];
+	[updater setFeedURL:[NSURL URLWithString:@"https://nfarina.s3.amazonaws.com/xcode-auto-assistant/appcast.xml"]];
+	[updater setDelegate:[AutoAssistant class]];
 	[updater setAutomaticallyChecksForUpdates:YES];
-	[updater checkForUpdates:self];
 	
 	if([NSClassFromString(@"XCSourceCodeTextView") jr_swizzleMethod:@selector(keyDown:) withMethod:@selector(AutoAssistant_keyDown:) error:NULL])
 		NSLog(@"AutoAssistant loaded!");
 
 	SupportedLanguages = [[NSArray alloc] initWithObjects:@"xcode.lang.objcpp", @"xcode.lang.objc", @"xcode.lang.objj", nil];
+}
+
++ (NSString *)pathToRelaunchForUpdater:(SUUpdater *)updater {
+	return [[NSBundle mainBundle] bundlePath];
 }
 
 + (AutoAssistant*)sharedInstance {
