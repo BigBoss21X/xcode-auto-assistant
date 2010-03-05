@@ -8,7 +8,31 @@
          <item>
             <title>Version 1.0.1</title>
             <pubDate>Thu, 4 Mar 2010 20:24:11 +0000</pubDate>
-            <sparkle:releaseNotesLink>http://xcode-auto-assistant.googlecode.com/svn/trunk/web/releasenotes/1.0.1.html</sparkle:releaseNotesLink>
+            <description><![CDATA[
+              <link href="http://xcode-auto-assistant.googlecode.com/svn/trunk/web/rnotes.css" type="text/css" rel="stylesheet" media="all">
+              <table class="dots" width="100%" border="0" cellspacing="0" cellpadding="0" summary="Two column table with heading">
+                <tr>
+                  <td class="blue">
+                    <h3>Popup works more consistently</h3>
+                  </td>
+                </tr>
+                <tr>
+                  <td valign="top">
+                    <p>Now you don't have to keep Xcode's original ESC binding for the completion list for xcode-auto-assistant to work. It can be whatever you want! Also, no more Front Row appearing out of nowhere.</p>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="blue">
+                    <h3>Sparkle Updates</h3>
+                  </td>
+                </tr>
+                <tr>
+                  <td valign="top">
+                    <p>Added automatic updates with Sparkle.</p>
+                  </td>
+                </tr>
+              </table>
+            ]]></description>
             <enclosure url="https://xcode-auto-assistant.googlecode.com/files/xcode-auto-assistant-1.0.zip" sparkle:version="1.0.1" length="18211" type="application/octet-stream" />
          </item>
    </channel>
