@@ -10,6 +10,8 @@ Simply move the product (`XcodeAutoAssistant.pbplugin`) to `~/Library/Applicatio
 
 Then restart Xcode.
 
+I also recommend going to Xcode preferences, Code Sense, and setting "Automatically Suggest" to _Never_.
+
 # Usage
 
 When editing an Objective-C file, the completion list will be triggered automatically as you type alphanumeric characters.
