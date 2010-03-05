@@ -1,0 +1,5 @@
+#summary Xcode-Auto-Assistant 1.0.1 Release Notes
+
+= Sparkle =
+
+Automatic updates with Sparkle.
