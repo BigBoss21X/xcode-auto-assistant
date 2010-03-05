@@ -2,14 +2,14 @@
 <rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle"  xmlns:dc="http://purl.org/dc/elements/1.1/">
    <channel>
       <title>Xcode-Auto-Assistant Changelog</title>
-      <link>https://ctu.appspot.com/appcast.xml</link>
+      <link>http://xcode-auto-assistant.googlecode.com/svn/trunk/web/appcast.xml</link>
       <description>Most recent changes with links to updates.</description>
       <language>en</language>
          <item>
             <title>Version 1.0.1</title>
             <pubDate>Thu, 4 Mar 2010 20:24:11 +0000</pubDate>
-            <sparkle:releaseNotesLink>http://ctu.appspot.com/releasenotes/1.2.2.html</sparkle:releaseNotesLink>
-            <enclosure url="https://transportapp.googlecode.com/files/Transport-1.2.2.zip" sparkle:version="1.2.2" length="768517" type="application/octet-stream" />
+            <sparkle:releaseNotesLink>http://xcode-auto-assistant.googlecode.com/svn/trunk/web/releasenotes/1.0.1.html</sparkle:releaseNotesLink>
+            <enclosure url="https://xcode-auto-assistant.googlecode.com/files/xcode-auto-assistant-1.0.zip" sparkle:version="1.0.1" length="" type="application/octet-stream" />
          </item>
    </channel>
 </rss>
