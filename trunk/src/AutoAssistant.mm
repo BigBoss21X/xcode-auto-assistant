@@ -80,6 +80,27 @@ NSWindow *FindAssistantWindow() {
 
 @end
 
+@interface NSString (CommentAndString)
+@property (nonatomic, readonly) BOOL isInsideComment, isInsideString;
+@end
+
+@implementation NSString (CommentAndString)
+
+- (BOOL)isInsideComment {
+	// you're writing a comment! maybe. this isn't a lexer.
+	return [self rangeOfString:@"//"].location != NSNotFound ||
+		  ([self rangeOfString:@"/*"].location != NSNotFound && [self rangeOfString:@"*/"].location == NSNotFound);
+}
+
+- (BOOL)isInsideString {
+	NSString *withoutEscapes = [self stringByReplacingOccurrencesOfString:@"\\\"" withString:@""];
+	int numberOfQuotes = [[withoutEscapes componentsSeparatedByString:@"\""] count];
+	return numberOfQuotes % 2 == 0;
+}
+
+@end
+
+
 @implementation AutoAssistant
 
 + (void)load {
@@ -119,17 +140,21 @@ NSWindow *FindAssistantWindow() {
 	
 	// Get the current line from the carat position
 	NSRange lineRange = [textView.textStorage.string lineRangeForRange:selectedRange];
-	lineRange.length -= 1;
+	if (lineRange.location + lineRange.length < textView.textStorage.string.length) lineRange.length -= 1; // account for newline except for last line
 	NSString* lineText = [textView.textStorage.string substringWithRange:lineRange];
-
+	
 	if (lineRange.location + lineRange.length == selectedRange.location)
 		return NO; // we're already at the end of a line, let XCode do it
-		
+	
+	NSString *prefix = [lineText substringToIndex:selectedRange.location - lineRange.location];
+	
+	if (prefix.isInsideComment || prefix.isInsideString) return NO;
+
 	// build up the result string
 	NSMutableString *result = [NSMutableString string];
 
 	// Poor man's trimEnd
-	NSString *trimmed = [lineText stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
+	NSString *trimmed = [lineText stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
 	
 	NSScanner *scanner = [NSScanner scannerWithString:lineText];
 	[scanner setCharactersToBeSkipped:nil];
@@ -145,7 +170,7 @@ NSWindow *FindAssistantWindow() {
 		return NO; // already a semicolon at the end
 	
 	[result appendString:@";"];
-
+	
 	[textView.undoManager beginUndoGrouping];
 	[[textView.undoManager prepareWithInvocationTarget:textView] replaceCharactersInRange:NSMakeRange(lineRange.location, [result length]) withString:lineText];
 	[textView.undoManager endUndoGrouping];
@@ -167,23 +192,17 @@ NSWindow *FindAssistantWindow() {
 	
 	// Get the current line from the carat position
 	NSRange lineRange = [textView.textStorage.string lineRangeForRange:selectedRange];
-	lineRange.length -= 1;
 	NSString* lineText = [textView.textStorage.string substringWithRange:lineRange];
 	
 	NSString *prefix = [lineText substringToIndex:selectedRange.location - lineRange.location];
-	
-	if ([prefix rangeOfString:@"//"].location != NSNotFound ||
-		([prefix rangeOfString:@"/*"].location != NSNotFound && [prefix rangeOfString:@"*/"].location == NSNotFound))
-		return NO; // you're writing a comment! maybe. this isn't a lexer.
+
+	if (prefix.isInsideComment) return NO;
 
 	// check for #import, the one place we can help you with a string!
 	if ([prefix rangeOfString:@"#import \""].location == 0)
 		return YES; // delay zero
-	
-	prefix = [prefix stringByReplacingOccurrencesOfString:@"\\\"" withString:@""];
-	int numberOfQuotes = [[prefix componentsSeparatedByString:@"\""] count];
-	if (numberOfQuotes % 2 == 0)
-		return NO; // you're writing a string! maybe. see above.
+
+	if (prefix.isInsideString) return NO;
 
 	NSUInteger wordLength = 1; // include the character you're typing
 	
